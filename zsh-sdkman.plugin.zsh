@@ -16,7 +16,7 @@ NONE="none"
 # PLUGIN MAIN
 #########################
 
-[[ -z "$SDKMAN_DIR" ]] && export SDKMAN_DIR="$HOME/.sdkman"
+_zsh_sdkman_dir
 ZSH_SDKMAN_VERSION_FILE=${SDKMAN_DIR}/version.txt
 
 #########################
@@ -76,7 +76,6 @@ _zsh_sdkman_install() {
   _zsh_sdkman_log $NONE "blue" "#############################################"
 }
 
-
 update_zsh_sdkman() {
   _zsh_sdkman_log $NONE "blue" "#############################################"
   _zsh_sdkman_log $BOLD "blue" "Checking new version of sdkman..."
@@ -89,30 +88,35 @@ update_zsh_sdkman() {
     _zsh_sdkman_log $BOLD "green" "Already up to date, current version : ${current_version}"
   else
     _zsh_sdkman_log $NONE "blue" "-> Updating sdkman..."
-     sdk selfupdate force > /dev/null 2>&1
-     echo ${version} > ${ZSH_SDKMAN_VERSION_FILE}
+    sdk selfupdate force > /dev/null 2>&1
+    echo ${version} > ${ZSH_SDKMAN_VERSION_FILE}
     _zsh_sdkman_log $BOLD "green" "Update OK"
   fi
   _zsh_sdkman_log $NONE "blue" "#############################################"
 }
 
 _zsh_sdkman_load() {
-    source "$HOME/.sdkman/bin/sdkman-init.sh"
-    # # export PATH
-    # export PATH=${PATH}:${SDKMAN_DIR}
+  source "$SDKMAN_DIR/bin/sdkman-init.sh"
 }
 
+_zsh_sdkman_dir() {
+  [[ -z "$SDKMAN_DIR" ]] && SDKMAN_DIR="$HOME/.sdkman"
+  if [[ "$(command -v brew)" && "$(brew ls -1 | grep sdkman-cli)" ]]; then
+    SDKMAN_DIR="$(brew --prefix sdkman-cli)/libexec"
+  fi
+  export SDKMAN_DIR
+}
 
 # install sdkman if it isnt already installed
-[[ ! -f "${ZSH_SDKMAN_VERSION_FILE}" ]] &&_zsh_sdkman_install
+[[ ! -f "${ZSH_SDKMAN_VERSION_FILE}" ]] && _zsh_sdkman_install
 
 # load sdkman if it is installed
 if [[ -f "${ZSH_SDKMAN_VERSION_FILE}" ]]; then
-    _zsh_sdkman_load
-    # Rebuild completion
-    0=${(%):-%N}
-    fpath=(${0:A:h} $fpath)
-    autoload -U compinit && compinit -C
+  _zsh_sdkman_load
+  # Rebuild completion
+  0=${(%):-%N}
+  fpath=(${0:A:h} $fpath)
+  autoload -U compinit && compinit -C
 fi
 
 ########################################################
@@ -131,4 +135,4 @@ alias sdko='sdk offline'
 alias sdksu='sdk selfupdate'
 alias sdkf='sdk flush'
 
-unset -f _zsh_sdkman_install _zsh_sdkman_check_requirement_list _zsh_sdkman_check_requirement _zsh_sdkman_load
+unset -f _zsh_sdkman_install _zsh_sdkman_check_requirement_list _zsh_sdkman_check_requirement _zsh_sdkman_load _zsh_sdkman_dir
