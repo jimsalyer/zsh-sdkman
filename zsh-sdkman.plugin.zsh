@@ -3,6 +3,7 @@
 #####################
 # COMMONS
 #####################
+
 autoload colors
 
 #########################
@@ -13,28 +14,16 @@ BOLD="bold"
 NONE="none"
 
 #########################
-# PLUGIN MAIN
-#########################
-
-echo "Running zsh-sdkman plugin"
-_zsh_sdkman_dir
-echo "$SDKMAN_DIR"
-ZSH_SDKMAN_VERSION_FILE=${SDKMAN_DIR}/version.txt
-
-#########################
 # Functions
 #########################
 
-_zsh_sdkman_log() {
-  local font=$1
-  local color=$2
-  local msg=$3
+_zsh_sdkman_check() {
+  [[ -z "$SDKMAN_DIR" ]] && SDKMAN_DIR="$HOME/.sdkman"
+  [[ -z "$ZSH_SDKMAN_VERSION_FILE" ]] && ZSH_SDKMAN_VERSION_FILE="$SDKMAN_DIR/version.txt"
 
-  if [ $font = $BOLD ]
-  then
-    echo $fg_bold[$color] "[zsh-sdkman-plugin] $msg" $reset_color
-  else
-    echo $fg[$color] "[zsh-sdkman-plugin] $msg" $reset_color
+  if [[ "$(command -v brew)" && "$(brew ls -1 | grep sdkman-cli)" ]]; then
+    SDKMAN_DIR="$(brew --prefix sdkman-cli)/libexec"
+    ZSH_SDKMAN_VERSION_FILE="$SDKMAN_DIR/var/version"
   fi
 }
 
@@ -59,10 +48,6 @@ _zsh_sdkman_check_requirement_list() {
   _zsh_sdkman_check_requirement curl
 }
 
-_zsh_sdkman_last_version() {
-  echo $(curl -s https://get.sdkman.io/ | grep SDKMAN_VERSION | head -n 1 | cut -d '"' -f 2)
-}
-
 _zsh_sdkman_install() {
   _zsh_sdkman_log $NONE "blue" "#############################################"
   _zsh_sdkman_log $BOLD "blue" "Installing sdkman..."
@@ -74,6 +59,27 @@ _zsh_sdkman_install() {
   echo ${last_version} > ${ZSH_SDKMAN_VERSION_FILE}
   _zsh_sdkman_log $BOLD "green" "Install OK"
   _zsh_sdkman_log $NONE "blue" "#############################################"
+}
+
+_zsh_sdkman_last_version() {
+  echo $(curl -s https://get.sdkman.io/ | grep SDKMAN_VERSION | head -n 1 | cut -d '"' -f 2)
+}
+
+_zsh_sdkman_load() {
+  source "$SDKMAN_DIR/bin/sdkman-init.sh"
+}
+
+_zsh_sdkman_log() {
+  local font=$1
+  local color=$2
+  local msg=$3
+
+  if [ $font = $BOLD ]
+  then
+    echo $fg_bold[$color] "[zsh-sdkman-plugin] $msg" $reset_color
+  else
+    echo $fg[$color] "[zsh-sdkman-plugin] $msg" $reset_color
+  fi
 }
 
 update_zsh_sdkman() {
@@ -95,17 +101,11 @@ update_zsh_sdkman() {
   _zsh_sdkman_log $NONE "blue" "#############################################"
 }
 
-_zsh_sdkman_load() {
-  source "$SDKMAN_DIR/bin/sdkman-init.sh"
-}
+#########################
+# PLUGIN MAIN
+#########################
 
-_zsh_sdkman_dir() {
-  [[ -z "$SDKMAN_DIR" ]] && SDKMAN_DIR="$HOME/.sdkman"
-  if [[ "$(command -v brew)" && "$(brew ls -1 | grep sdkman-cli)" ]]; then
-    SDKMAN_DIR="$(brew --prefix sdkman-cli)/libexec"
-  fi
-  export SDKMAN_DIR
-}
+_zsh_sdkman_check
 
 # install sdkman if it isnt already installed
 [[ ! -f "${ZSH_SDKMAN_VERSION_FILE}" ]] && _zsh_sdkman_install
@@ -113,7 +113,7 @@ _zsh_sdkman_dir() {
 # load sdkman if it is installed
 if [[ -f "${ZSH_SDKMAN_VERSION_FILE}" ]]; then
   _zsh_sdkman_load
-  # Rebuild completion
+  # Rebuild completion
   0=${(%):-%N}
   fpath=(${0:A:h} $fpath)
   autoload -U compinit && compinit -C
@@ -122,6 +122,7 @@ fi
 ########################################################
 ##### ALIASES
 ########################################################
+
 alias sdki='sdk install'
 alias sdkun='sdk uninstall'
 alias sdkls='sdk list'
@@ -135,4 +136,4 @@ alias sdko='sdk offline'
 alias sdksu='sdk selfupdate'
 alias sdkf='sdk flush'
 
-unset -f _zsh_sdkman_install _zsh_sdkman_check_requirement_list _zsh_sdkman_check_requirement _zsh_sdkman_load _zsh_sdkman_dir
+unset -f _zsh_sdkman_check _zsh_sdkman_check_requirement _zsh_sdkman_check_requirement_list _zsh_sdkman_install _zsh_sdkman_load
