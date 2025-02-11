@@ -16,7 +16,9 @@ NONE="none"
 # PLUGIN MAIN
 #########################
 
+echo "Running zsh-sdkman plugin"
 _zsh_sdkman_dir
+echo "$SDKMAN_DIR"
 ZSH_SDKMAN_VERSION_FILE=${SDKMAN_DIR}/version.txt
 
 #########################
@@ -37,19 +39,18 @@ _zsh_sdkman_log() {
 }
 
 _zsh_sdkman_check_requirement() {
-    local command=$1
-    _zsh_sdkman_log $NONE "blue" "#############################################"
-    _zsh_sdkman_log $NONE "blue" "Looking for ${command}..."
-    which "${command}" > /dev/null 2>&1
-    if [[ $? -eq 1 ]]; then
-        _zsh_sdkman_log $NONE "blue" "Not found"
-        _zsh_sdkman_log $NONE "blue" "========================================="
-        _zsh_sdkman_log $NONE "blue" "Please install ${command} on your system"
-        _zsh_sdkman_log $NONE "blue" "using your favourite package manager."
-        _zsh_sdkman_log $NONE "blue" "========================================="
-        exit 1
-    fi
-
+  local command=$1
+  _zsh_sdkman_log $NONE "blue" "#############################################"
+  _zsh_sdkman_log $NONE "blue" "Looking for ${command}..."
+  which "${command}" > /dev/null 2>&1
+  if [[ $? -eq 1 ]]; then
+      _zsh_sdkman_log $NONE "blue" "Not found"
+      _zsh_sdkman_log $NONE "blue" "========================================="
+      _zsh_sdkman_log $NONE "blue" "Please install ${command} on your system"
+      _zsh_sdkman_log $NONE "blue" "using your favourite package manager."
+      _zsh_sdkman_log $NONE "blue" "========================================="
+      exit 1
+  fi
 }
 
 _zsh_sdkman_check_requirement_list() {
@@ -57,7 +58,6 @@ _zsh_sdkman_check_requirement_list() {
   _zsh_sdkman_check_requirement unzip
   _zsh_sdkman_check_requirement curl
 }
-
 
 _zsh_sdkman_last_version() {
   echo $(curl -s https://get.sdkman.io/ | grep SDKMAN_VERSION | head -n 1 | cut -d '"' -f 2)
